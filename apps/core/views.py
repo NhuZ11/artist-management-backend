@@ -4,9 +4,9 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .permissions import IsSuperAdmin, IsArtist
-from .services import superadmin_services
-from .serializers import UserSerializer
+from .permissions import IsSuperAdmin, IsArtist, IsArtistManager
+from .services import superadmin_services, artistmanager_service
+from .serializers import UserSerializer, ArtistSerializer
 
 
 class UserListView(APIView):
@@ -45,3 +45,15 @@ class UserDetailView(APIView):
         updated_user = superadmin_services.SuperAdminServices.update_user(new_password,new_role,pk)
         serializer = UserSerializer(updated_user)
         return Response(serializer.data)
+    
+
+
+
+#Artist by artist_manager
+class ArtistListView(APIView):
+    permission_classes=[IsArtistManager]
+
+    def get(self, request):
+       users =  artistmanager_service.ArtistManagerService.get_users()
+       serializer = ArtistSerializer(users, many=True)
+       return Response(serializer.data)
