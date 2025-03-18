@@ -18,14 +18,17 @@ class UserListView(APIView):
        return Response(serializer.data)
     
     def post(self,request):
-        email = request.data.get("email")
-        password = request.data.get("password")
-        role = request.data.get("role")
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data.get("email")
+            password = serializer.validated_data.get("password")
+            role = serializer.validated_data.get("role")
 
-        user_id = superadmin_services.SuperAdminServices.create_user(email,password,role)
+            user_id = superadmin_services.SuperAdminServices.create_user(email,password,role)
 
-        return Response({"message": "User created", "user_id": user_id}, status=status.HTTP_201_CREATED)
-    
+            return Response({"message": "User created", "user_id": user_id}, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserDetailView(APIView):
     permission_classes = [IsSuperAdmin] 
@@ -47,13 +50,48 @@ class UserDetailView(APIView):
         return Response(serializer.data)
     
 
-
-
 #Artist by artist_manager
-class ArtistListView(APIView):
+class ArtistListCreateView(APIView):
     permission_classes=[IsArtistManager]
 
     def get(self, request):
-       users =  artistmanager_service.ArtistManagerService.get_users()
+       users =  artistmanager_service.ArtistManagerService.get_artists()
        serializer = ArtistSerializer(users, many=True)
        return Response(serializer.data)
+    
+    def post(self,request):
+        serializer = ArtistSerializer(data=request.data)
+        email= request.data.get("email")
+        password = request.data.get("password")
+        if serializer.is_valid():
+            artist_name = serializer.validated_data.get("artist_name")
+
+            
+            artist_id = artistmanager_service.ArtistManagerService.create_artist_profile(artist_name,email,password)
+            return Response({"message": "User created", "user_id": artist_id}, status=status.HTTP_201_CREATED)
+
+
+class ArtistDetailView(APIView):
+    permission_classes=[IsArtistManager]
+
+    def delete(self,request,pk):
+        rows_deleted = artistmanager_service.ArtistManagerService.delete_artist(pk)
+        return Response(f"Rows deleted: {rows_deleted}", status=status.HTTP_200_OK)
+
+    def patch(self, request, pk):
+        artist_name = request.data.get("artist_name")
+        dob = request.data.get("dob")
+        gender = request.data.get("gender")
+        address = request.data.get("address")
+        first_release_year = request.data.get("first_release_year")
+        no_of_albums_released = request.data.get("no_of_albums_released")
+
+        updated_artist = artistmanager_service.ArtistManagerService.update_artist(
+            artist_name, dob, gender, address, first_release_year, no_of_albums_released, pk
+        )
+
+        if updated_artist:
+            serializer = ArtistSerializer(updated_artist)  # Now this gets a dictionary, not an int
+            return Response(serializer.data, status=200)
+        else:
+            return Response({"message": "Artist update failed or artist not found."}, status=400)

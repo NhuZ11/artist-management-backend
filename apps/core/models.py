@@ -26,11 +26,12 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class ArtistProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="artist_profile")
+    artist_name = models.CharField(max_length=200)
     dob = models.DateField(blank=True, null=True)
     gender = models.CharField(max_length=1, choices=[('m', 'Male'), ('f', 'Female'), ('o', 'Other')], blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     first_release_year = models.IntegerField(blank=True, null=True)
-    no_of_albums_released = models.IntegerField(default=0)
+    no_of_albums_released = models.IntegerField(default=0, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
