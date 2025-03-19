@@ -55,6 +55,7 @@ class ArtistListCreateView(APIView):
     permission_classes=[IsArtistManager]
 
     def get(self, request):
+       print(request.user)
        users =  artistmanager_service.ArtistManagerService.get_artists()
        serializer = ArtistSerializer(users, many=True)
        return Response(serializer.data)
