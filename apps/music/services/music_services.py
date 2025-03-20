@@ -40,3 +40,17 @@ class MusicManagerService:
         with connection.cursor() as cursor:
             cursor.execute("DELETE FROM core_music WHERE id = %s AND artist_id = %s;", [music_id, artist_id])
             return cursor.rowcount
+        
+
+    @staticmethod
+    def update_music(music_id, artist_id, title, album_name=None, genre=None):
+        """Update a music record by ID."""
+        query = """
+            UPDATE core_music
+            SET title = %s, album_name = %s, genre = %s, updated_at = NOW()
+            WHERE id = %s AND artist_id = %s;
+            """
+        with connection.cursor() as cursor:
+            cursor.execute(query, [title, album_name, genre, music_id, artist_id])
+            return cursor.rowcount
+        

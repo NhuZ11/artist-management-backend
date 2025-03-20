@@ -68,30 +68,25 @@ class MusicDetailView(APIView):
             return Response({"error": "Music not found"}, status=status.HTTP_404_NOT_FOUND)
         return Response({"message": f"Rows deleted: {rows_deleted}"}, status=status.HTTP_200_OK)
     
-    def patch(self, request, pk):
+    
+    def put(self, request, pk):
         user = request.user
         try:
             artist = ArtistProfile.objects.get(user=user.id)
         except ArtistProfile.DoesNotExist:
             return Response({"error": "Artist profile not found"}, status=status.HTTP_404_NOT_FOUND)
         
-
-    
-    def put(self, request, pk):
-        user = request.user
-        artist = ArtistProfile.objects.filter(user=user.id).first()
-        if not artist:
-            return Response({"error": "Artist profile not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        music = Music.objects.filter(id=pk, artist=artist).first()
-        if not music:
-            return Response({"error": "Music not found or not owned by the artist"}, status=status.HTTP_404_NOT_FOUND)
-
-        serializer = MusicSerializer(music, data=request.data, partial=True)
+        serializer = MusicSerializer(data=request.data)
         if serializer.is_valid():
-            rows_updated = music_services.MusicManagerService.update_music(pk, artist.id, **serializer.validated_data)
-            if rows_updated:
-                music.refresh_from_db()
-                return Response(MusicSerializer(music).data, status=status.HTTP_200_OK)
-
+            rows_updated = music_services.MusicManagerService.update_music(
+                music_id=pk,
+                artist_id=artist.id,
+                title=serializer.validated_data["title"],
+                album_name=serializer.validated_data.get("album_name"),
+                genre=serializer.validated_data.get("genre")
+            )
+            if rows_updated == 0:
+                return Response({"error": "Music not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"message": f"Rows updated: {rows_updated}"}, status=status.HTTP_200_OK)
+        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
